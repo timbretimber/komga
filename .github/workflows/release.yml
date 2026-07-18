@@ -24,7 +24,7 @@ on:
         type: boolean
       conveyor-copied-site:
         description: 'Conveyor copied site'
-        default: true
+        default: false
         type: boolean
       docker_release:
         description: 'Push Docker images'
@@ -32,7 +32,7 @@ on:
         type: boolean
       msstore_release:
         description: 'Release to the MS Store'
-        default: true
+        default: false
         type: boolean
 
 jobs:
@@ -90,11 +90,11 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
-      - name: Login to Docker Hub
-        uses: docker/login-action@v4
-        with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_PASSWORD }}
+      # - name: Login to Docker Hub
+      #   uses: docker/login-action@v4
+      #   with:
+      #     username: ${{ secrets.DOCKER_USERNAME }}
+      #     password: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Login to Docker Hub
         uses: docker/login-action@v4
@@ -178,32 +178,32 @@ jobs:
           mkdir ./secret
           echo $APPLE_PRIVATE_KEY | base64 --decode > ./secret/apple_private_key.p8
 
-      - name: Conveyor make copied-site
-        uses: hydraulic-software/conveyor/actions/build@v22.1
-        if: inputs.conveyor-copied-site
-        with:
-          command: --cache-limit=2.0 -f conveyor.ci.conf make copied-site -o ./output/site
-          signing_key: ${{ secrets.CONVEYOR_SIGNING_KEY }}
-          agree_to_license: 1
-        env:
-          APPLE_ISSUER_ID: ${{ secrets.APPLE_ISSUER_ID }}
-          APPLE_KEY_ID: ${{ secrets.APPLE_KEY_ID }}
-          AWS_S3_BUCKET: ${{ secrets.B2_BUCKET }}
-          AWS_S3_ENDPOINT: 'https://s3.us-east-005.backblazeb2.com'
-          AWS_ACCESS_KEY_ID: ${{ secrets.B2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_SECRET_ACCESS_KEY }}
-      - name: Upload Conveyor log
-        if: always() && inputs.conveyor-copied-site
-        uses: actions/upload-artifact@v7
-        with:
-          name: conveyor-make-copied-site
-          path: ~/.cache/hydraulic/conveyor/logs/log.latest.txt
+      # - name: Conveyor make copied-site
+      #   uses: hydraulic-software/conveyor/actions/build@v22.1
+      #   if: inputs.conveyor-copied-site
+      #   with:
+      #     command: --cache-limit=2.0 -f conveyor.ci.conf make copied-site -o ./output/site
+      #     signing_key: ${{ secrets.CONVEYOR_SIGNING_KEY }}
+      #     agree_to_license: 1
+      #   env:
+      #     APPLE_ISSUER_ID: ${{ secrets.APPLE_ISSUER_ID }}
+      #     APPLE_KEY_ID: ${{ secrets.APPLE_KEY_ID }}
+      #     AWS_S3_BUCKET: ${{ secrets.B2_BUCKET }}
+      #     AWS_S3_ENDPOINT: 'https://s3.us-east-005.backblazeb2.com'
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.B2_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_SECRET_ACCESS_KEY }}
+      # - name: Upload Conveyor log
+      #   if: always() && inputs.conveyor-copied-site
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     name: conveyor-make-copied-site
+      #     path: ~/.cache/hydraulic/conveyor/logs/log.latest.txt
 
       - name: JReleaser Release
         if: inputs.github_release
         run: ./gradlew jreleaserRelease
         env:
-          JRELEASER_GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: JReleaser Release output
         if: always() && inputs.github_release
         uses: actions/upload-artifact@v7
@@ -231,35 +231,35 @@ jobs:
             build/jreleaser/trace.log
             build/jreleaser/output.properties
 
-      - name: Conveyor - publish to Microsoft Store
-        uses: hydraulic-software/conveyor/actions/build@v22.1
-        if: inputs.msstore_release
-        with:
-          command: --cache-limit=2.0 -f conveyor.msstore.ci.conf make ms-store-release -o ./output/msstore
-          signing_key: ${{ secrets.CONVEYOR_SIGNING_KEY }}
-          agree_to_license: 1
-        env:
-          CONVEYOR_MSSTORE_CLIENT_ID: ${{ secrets.CONVEYOR_MSSTORE_CLIENT_ID }}
-          CONVEYOR_MSSTORE_CLIENT_SECRET: ${{ secrets.CONVEYOR_MSSTORE_CLIENT_SECRET }}
-          CONVEYOR_MSSTORE_TENANT_ID: ${{ secrets.CONVEYOR_MSSTORE_TENANT_ID }}
-          AWS_S3_BUCKET: ${{ secrets.B2_BUCKET }}
-          AWS_S3_ENDPOINT: 'https://s3.us-east-005.backblazeb2.com'
-          AWS_ACCESS_KEY_ID: ${{ secrets.B2_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_SECRET_ACCESS_KEY }}
-      - name: Upload Conveyor log
-        if: always() && inputs.msstore_release
-        uses: actions/upload-artifact@v7
-        with:
-          name: conveyor-ms-store-release
-          path: ~/.cache/hydraulic/conveyor/logs/log.latest.txt
+      # - name: Conveyor - publish to Microsoft Store
+      #   uses: hydraulic-software/conveyor/actions/build@v22.1
+      #   if: inputs.msstore_release
+      #   with:
+      #     command: --cache-limit=2.0 -f conveyor.msstore.ci.conf make ms-store-release -o ./output/msstore
+      #     signing_key: ${{ secrets.CONVEYOR_SIGNING_KEY }}
+      #     agree_to_license: 1
+      #   env:
+      #     CONVEYOR_MSSTORE_CLIENT_ID: ${{ secrets.CONVEYOR_MSSTORE_CLIENT_ID }}
+      #     CONVEYOR_MSSTORE_CLIENT_SECRET: ${{ secrets.CONVEYOR_MSSTORE_CLIENT_SECRET }}
+      #     CONVEYOR_MSSTORE_TENANT_ID: ${{ secrets.CONVEYOR_MSSTORE_TENANT_ID }}
+      #     AWS_S3_BUCKET: ${{ secrets.B2_BUCKET }}
+      #     AWS_S3_ENDPOINT: 'https://s3.us-east-005.backblazeb2.com'
+      #     AWS_ACCESS_KEY_ID: ${{ secrets.B2_ACCESS_KEY_ID }}
+      #     AWS_SECRET_ACCESS_KEY: ${{ secrets.B2_SECRET_ACCESS_KEY }}
+      # - name: Upload Conveyor log
+      #   if: always() && inputs.msstore_release
+      #   uses: actions/upload-artifact@v7
+      #   with:
+      #     name: conveyor-ms-store-release
+      #     path: ~/.cache/hydraulic/conveyor/logs/log.latest.txt
 
-  dispatch:
-    needs: release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Repository Dispatch
-        uses: peter-evans/repository-dispatch@v4
-        with:
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}
-          repository: gotson/komga-website
-          event-type: komga-release
+  # dispatch:
+  #   needs: release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Repository Dispatch
+  #       uses: peter-evans/repository-dispatch@v4
+  #       with:
+  #         token: ${{ secrets.REPO_ACCESS_TOKEN }}
+  #         repository: gotson/komga-website
+  #         event-type: komga-release
